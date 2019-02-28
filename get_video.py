@@ -87,12 +87,12 @@ def video_gen(path_to_videos, frames_per_video, frame_height, frame_width, chann
 
             for i in current_batch:
                 # get frames and its corresponding color for an traffic light
-                single_frame, single_clip, sport_class = get_video_and_label(
+                frames, single_clip, sport_class = get_video_and_label(
                     i, data, frames_per_video, frame_height, frame_width)
 
                 # Appending them to existing batch
-                frame = np.append(frame, single_frame, axis=0)
-                clip = np.append(clip, single_clip, axis=0)
+                input_2d = np.append(input_2d, frames, axis=0)
+                input_3d = np.append(input_3d, single_clip, axis=0)
 
                 y_train = np.append(y_train, [sport_class])
             y_train = to_categorical(y_train, num_classes=num_classes)
