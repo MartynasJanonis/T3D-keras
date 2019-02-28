@@ -7,6 +7,7 @@ import random
 ROOT_PATH = ''
 
 # TODO: Add random cropping (from 256x256 to 224x224)
+# TODO: Figure out whether it's worth mean subtracting images
 
 def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
     # print('reading video from', src)
@@ -19,7 +20,7 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
     except ValueError:
         # If there aren't enough frames, just start at the beginning
         seq_begin = 0
-        print(src, " doesn't have enough frames, padding with the last frame")
+        # print(src, " doesn't have enough frames, padding with the last frame")
 
     cap.set(cv2.CAP_PROP_POS_FRAMES, seq_begin)
 
@@ -70,6 +71,7 @@ def get_video_and_label_TL(path_to_videos, frames_per_video, frame_height, frame
 
     return frames, frames2, 0
 
+
 # Video generation for transfer learning, num_classes should be 2
 def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, channels, num_classes=2, batch_size=4):
     while True:
@@ -89,8 +91,11 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
                 f2 = [cv2.flip(f,1) for f in f2]
                 # print("AUG applied")
             f1 = np.asarray(f1)
-            f1 = np.expand_dims(f1, axis=0)
             f2 = np.asarray(f2)
+            # Rescale to [-1, 1]
+            f1 = f1 / (f1.max() / 2.0) - 1
+            f2 = f2 / (f2.max() / 2.0) - 1
+            f1 = np.expand_dims(f1, axis=0)
             f2 = np.expand_dims(f2, axis=0)
             # Appending them to existing batch
             input_2d_batch = np.append(input_2d_batch, f1, axis=0)
@@ -100,5 +105,3 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
         y_train = to_categorical(y_train, num_classes=num_classes)
 
         yield ([input_2d_batch, input_3d], y_train)
-
-

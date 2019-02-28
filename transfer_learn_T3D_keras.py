@@ -37,9 +37,7 @@ def transfer_learning():
     # For transfer learning, nb_classes has to be 2
     nb_classes = 2
 
-    video_train_generator = video_gen_TL(
-        PATH_TO_VIDEOS, FRAMES_PER_VIDEO, FRAME_HEIGHT, FRAME_WIDTH, FRAME_CHANNEL, nb_classes, batch_size=BATCH_SIZE)
-    video_val_generator = video_gen_TL(
+    video_generator = video_gen_TL(
         PATH_TO_VIDEOS, FRAMES_PER_VIDEO, FRAME_HEIGHT, FRAME_WIDTH, FRAME_CHANNEL, nb_classes, batch_size=BATCH_SIZE)
 
     # Get Model
@@ -48,9 +46,9 @@ def transfer_learning():
 
     checkpoint = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
-    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=20)
-    reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                       patience=4,
+    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=50)
+    reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
+                                       patience=10,
                                        verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
     csvLogger = CSVLogger('history.csv', append=True)
     tensorboard = TensorBoard(log_dir='./logs/T3D_Transfer_Learning')
@@ -59,8 +57,8 @@ def transfer_learning():
 
     # compile model
     #optim = Adam(lr=1e-4, decay=1e-6)
-    #optim = SGD(lr = 0.1, momentum=0.9, decay=1e-4, nesterov=True)
-    optim = Nadam(lr=1e-4)
+    optim = SGD(lr = 0.1, momentum=0.9, decay=1e-4, nesterov=True)
+    # optim = Nadam(lr=1e-4)
     model.compile(optimizer=optim, loss=['binary_crossentropy'], metrics=['accuracy'])
     
     if os.path.exists('./T3D_saved_model_weights.hdf5'):
@@ -72,18 +70,19 @@ def transfer_learning():
     print('Training started....')
 
     # Arbitrary numbers as the dataset is huge (many video combinations possible)
-    train_steps = 800
+    train_steps = 1800
     val_steps = 200
 
     history = model.fit_generator(
-        video_train_generator,
+        video_generator,
         steps_per_epoch=train_steps,
         epochs=EPOCHS,
-        validation_data=video_val_generator,
+        validation_data=video_generator,
         validation_steps=val_steps,
         verbose=1,
         callbacks=callbacks_list,
-        workers=1
+        workers=1,
+        use_multiprocessing=True
     )
     model.save(MODEL_FILE_NAME)
 
