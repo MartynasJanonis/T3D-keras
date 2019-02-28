@@ -48,7 +48,7 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
     frames = [cv2.resize(f,(frame_width, frame_height)) for f in frames]
     frames = [cv2.normalize(f, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX) for f in frames]
 
-    return np.asarray(frames)
+    return frames
 
 
 # Gets the videos and labels for transfer learning
@@ -57,7 +57,7 @@ def get_video_and_label_TL(path_to_videos, frames_per_video, frame_height, frame
     label = random.randint(0,1)
     video_src = os.path.join(path_to_videos, random.choice(os.listdir(path_to_videos)))
     frames = get_video_frames(video_src, frames_per_video, frame_height, frame_width)
-    frames = np.expand_dims(frames, axis=0)
+
     if label == 1:
         return frames, frames, 1
 
@@ -67,7 +67,6 @@ def get_video_and_label_TL(path_to_videos, frames_per_video, frame_height, frame
         video_src2 = os.path.join(path_to_videos, random.choice(os.listdir(path_to_videos)))
     
     frames2 = get_video_frames(video_src2, frames_per_video, frame_height, frame_width)
-    frames2 = np.expand_dims(frames2, axis=0)
 
     return frames, frames2, 0
 
@@ -80,10 +79,20 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
         y_train = np.empty([0], dtype=np.int32)
 
         for batch in range(batch_size):
-                # get frames and its corresponding color for an traffic light
+            # get frames and the label (whether the frames match or not)
             f1, f2, label = get_video_and_label_TL(path_to_videos, frames_per_video, frame_height, frame_width)
-
-                # Appending them to existing batch
+            
+            # whether to apply augmentations
+            aug = random.randint(0,1)
+            if aug:
+                f1 = [cv2.flip(f,1) for f in f1]
+                f2 = [cv2.flip(f,1) for f in f2]
+                # print("AUG applied")
+            f1 = np.asarray(f1)
+            f1 = np.expand_dims(f1, axis=0)
+            f2 = np.asarray(f2)
+            f2 = np.expand_dims(f2, axis=0)
+            # Appending them to existing batch
             input_2d_batch = np.append(input_2d_batch, f1, axis=0)
             input_3d = np.append(input_3d, f2, axis=0)
 
