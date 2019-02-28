@@ -8,7 +8,7 @@ ROOT_PATH = ''
 
 # TODO: Add random cropping (from 256x256 to 224x224)
 
-def get_video_frames(src, fpv=32, frame_height=256, frame_width=256):
+def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
     # print('reading video from', src)
     cap = cv2.VideoCapture(src)
     frames = []
