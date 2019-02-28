@@ -3,10 +3,12 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
-from keras.optimizers import Adam, SGD
+from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, CSVLogger, TensorBoard
+from keras.optimizers import Adam, SGD, Nadam
 import keras.backend as K
 import traceback
+
+from focal_loss import binary_focal_loss
 
 from T3D_keras import densenet161_3D_DropOut, densenet121_3D_DropOut
 from get_video import video_gen
@@ -17,8 +19,8 @@ FRAMES_PER_VIDEO = 20
 FRAME_HEIGHT = 256
 FRAME_WIDTH = 256
 FRAME_CHANNEL = 3
-NUM_CLASSES = 50
-BATCH_SIZE = 5
+NUM_CLASSES = 2
+BATCH_SIZE = 3
 EPOCHS = 200
 MODEL_FILE_NAME = 'T3D_saved_model.h5'
 
@@ -44,17 +46,20 @@ def train():
 
     checkpoint = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
-    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=100)
+    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=20)
     reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                       patience=20,
+                                       patience=4,
                                        verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
+    csvLogger = CSVLogger('history.csv', append=True)
+    tensorboard = TensorBoard(log_dir='./logs/T3D')
 
-    callbacks_list = [checkpoint, reduceLROnPlat, earlyStop]
+    callbacks_list = [checkpoint, reduceLROnPlat, earlyStop, csvLogger, tensorboard]
 
     # compile model
-    optim = Adam(lr=1e-4, decay=1e-6)
+    #optim = Adam(lr=1e-4, decay=1e-6)
     #optim = SGD(lr = 0.1, momentum=0.9, decay=1e-4, nesterov=True)
-    model.compile(optimizer=optim, loss='categorical_crossentropy', metrics=['accuracy'])
+    optim = Nadam(lr=1e-4)
+    model.compile(optimizer=optim, loss=[binary_focal_loss(alpha=.25, gamma=2)], metrics=['accuracy', 'binary_crossentropy'])
     
     if os.path.exists('./T3D_saved_model_weights.hdf5'):
         print('Pre-existing model weights found, loading weights.......')
