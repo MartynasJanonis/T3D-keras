@@ -131,7 +131,7 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = BatchNormalization()(x)
 
     x = Activation('relu')(x)
-    x = AveragePooling3D(pool_size=(1, 7, 7))(x)
+    x = AveragePooling3D(pool_size=(1, 6, 6))(x)
     x = Flatten(name='flatten_3d')(x)
     x = Dense(1024, activation='relu')(x)
     #--------------from 2d densenet model-----------------
@@ -205,7 +205,7 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = BatchNormalization()(x)
 
     x = Activation('relu')(x)
-    x = AveragePooling3D(pool_size=(1, 7, 7))(x)
+    x = AveragePooling3D(pool_size=(1, 6, 6))(x)
     x = Flatten(name='flatten_3d')(x)
     x = Dense(1024, activation='relu')(x)
 
