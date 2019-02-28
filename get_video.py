@@ -72,31 +72,24 @@ def get_video_and_label_TL(path_to_videos, frames_per_video, frame_height, frame
     return frames, frames2, 0
 
 # Video generation for transfer learning, num_classes should be 2
-def video_gen(path_to_videos, frames_per_video, frame_height, frame_width, channels, num_classes=2, batch_size=4):
+def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, channels, num_classes=2, batch_size=4):
     while True:
+        input_2d_batch = np.empty([0, frames_per_video, frame_height, frame_width, channels], dtype=np.float32)
+        input_3d = np.empty([0, frames_per_video, frame_height, frame_width, channels], dtype=np.float32)
 
-        for batch in range(0, batch_size):
-            # slice out the current batch according to batch-size
-            current_batch = indices_arr[batch:(batch + batch_size)]
+        y_train = np.empty([0], dtype=np.int32)
 
-            # initializing the arrays, x_train and y_train
-            frames1 = np.empty([0, frames_per_video, frame_height, frame_width, channels], dtype=np.float32)
-            frames2 = frames1
-
-            y_train = np.empty([0], dtype=np.int32)
-
-            for i in current_batch:
+        for batch in range(batch_size):
                 # get frames and its corresponding color for an traffic light
-                frames, single_clip, sport_class = get_video_and_label(
-                    i, data, frames_per_video, frame_height, frame_width)
+            f1, f2, label = get_video_and_label_TL(path_to_videos, frames_per_video, frame_height, frame_width)
 
                 # Appending them to existing batch
-                input_2d = np.append(input_2d, frames, axis=0)
-                input_3d = np.append(input_3d, single_clip, axis=0)
+            input_2d_batch = np.append(input_2d_batch, f1, axis=0)
+            input_3d = np.append(input_3d, f2, axis=0)
 
-                y_train = np.append(y_train, [sport_class])
-            y_train = to_categorical(y_train, num_classes=num_classes)
+            y_train = np.append(y_train, [label])
+        y_train = to_categorical(y_train, num_classes=num_classes)
 
-            yield ([frame, clip], y_train)
+        yield ([input_2d_batch, input_3d], y_train)
 
 
