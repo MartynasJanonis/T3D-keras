@@ -92,9 +92,9 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
                 # print("AUG applied")
             f1 = np.asarray(f1)
             f2 = np.asarray(f2)
-            # Rescale to [-1, 1]
-            f1 = f1 / (f1.max() / 2.0) - 1
-            f2 = f2 / (f2.max() / 2.0) - 1
+            # Normalize the videos
+            f1 = (f1 - f1.min())/np.ptp(f1)
+            f2 = (f2 - f2.min())/np.ptp(f2)
             f1 = np.expand_dims(f1, axis=0)
             f2 = np.expand_dims(f2, axis=0)
             # Appending them to existing batch

@@ -43,17 +43,17 @@ def _Transition(prev_layer, num_output_features):
     x = BatchNormalization()(prev_layer)
     x = Activation('relu')(x)
     x = Conv3D(filters=num_output_features, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
-    x = AveragePooling3D(pool_size=(2, 2, 2), strides=(2, 2, 2))(x)
+    x = AveragePooling3D(pool_size=(2, 2, 2), strides=(6, 2, 2))(x)
     # print('Completed _Transition')
     return x
 
 
-def _TTL(prev_layer):
+def _TTL(prev_layer, third_kernel_size):
     # print('In _TTL')
     b1 = BatchNormalization()(prev_layer)
     b1 = Activation('relu')(b1)
     # b1 = Conv3D(128, kernel_size=(1), strides=1, use_bias=False, padding='same')(b1)
-    b1 = Conv3D(128, kernel_size=(1, 3, 3), strides=1, use_bias=False, padding='same')(b1)
+    b1 = Conv3D(128, kernel_size=(1, 1, 1), strides=1, use_bias=False, padding='same')(b1)
 
     b2 = BatchNormalization()(prev_layer)
     b2 = Activation('relu')(b2)
@@ -61,7 +61,7 @@ def _TTL(prev_layer):
 
     b3 = BatchNormalization()(prev_layer)
     b3 = Activation('relu')(b3)
-    b3 = Conv3D(128, kernel_size=(4, 3, 3), strides=1, use_bias=False, padding='same')(b3)
+    b3 = Conv3D(128, kernel_size=third_kernel_size, strides=1, use_bias=False, padding='same')(b3)
 
     x = keras.layers.concatenate([b1, b2, b3], axis=1)
     # print('completed _TTL')
@@ -106,8 +106,7 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = Activation('relu')(x)
 
     # need to check padding
-    x = MaxPooling3D(pool_size=(3, 3, 3), strides=(
-        2, 2, 2), padding='valid')(x)
+    x = MaxPooling3D(pool_size=(3, 3, 3), strides=(1,2,2), padding='same')(x)
 
     # Each denseblock
     num_features = num_init_features
@@ -120,8 +119,11 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
 
         if i != len(block_config) - 1:
             # print('Not Last layer, so adding Temporal Transition Layer')
+            third_kernel_size = (4, 3, 3)
+            if i == 0:
+                third_kernel_size = (6, 3, 3)
 
-            x = _TTL(x)
+            x = _TTL(x, third_kernel_size)
             # num_features = 128*3
 
             x = _Transition(x, num_output_features=num_features)
@@ -131,7 +133,7 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = BatchNormalization()(x)
 
     x = Activation('relu')(x)
-    x = AveragePooling3D(pool_size=(1, 6, 6))(x)
+    x = AveragePooling3D(pool_size=(2, 7, 7))(x)
     x = Flatten(name='flatten_3d')(x)
     x = Dense(1024, activation='relu')(x)
     #--------------from 2d densenet model-----------------
@@ -148,7 +150,7 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     out = Dense(num_classes, activation='softmax')(x)
 
     model = Model(inputs=[inp_2d_batch, inp_3d], outputs=[out])
-    model.summary()
+    # model.summary()
 
     return model
 
@@ -180,8 +182,7 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = Activation('relu')(x)
 
     # need to check padding
-    x = MaxPooling3D(pool_size=(3, 3, 3), strides=(
-        2, 2, 2), padding='valid')(x)
+    x = MaxPooling3D(pool_size=(3, 3, 3), strides=(1,2,2), padding='same')(x)
 
     # Each denseblock
     num_features = num_init_features
@@ -194,8 +195,11 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
 
         if i != len(block_config) - 1:
             # print('Not Last layer, so adding Temporal Transition Layer')
+            third_kernel_size = (4, 3, 3)
+            if i == 0:
+                third_kernel_size = (6, 3, 3)
 
-            x = _TTL(x)
+            x = _TTL(x, third_kernel_size)
             # num_features = 128*3
 
             x = _Transition(x, num_output_features=num_features)
@@ -205,20 +209,13 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = BatchNormalization()(x)
 
     x = Activation('relu')(x)
-    x = AveragePooling3D(pool_size=(1, 6, 6))(x)
+    x = AveragePooling3D(pool_size=(2, 7, 7))(x)
     x = Flatten(name='flatten_3d')(x)
-    x = Dense(1024, activation='relu')(x)
 
-    #-----------------------------------------------------
-    x = Dropout(0.65)(x)
-    x = Dense(512, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    x = Dense(128, activation='relu')(x)
-    x = Dropout(0.35)(x)
     out = Dense(num_classes, activation='softmax')(x)
 
     model = Model(inputs=[inp_3d], outputs=[out])
-    model.summary()
+    # model.summary()
 
     return model
 
