@@ -9,7 +9,7 @@ from keras import losses
 import keras.backend as K
 import traceback
 
-from T3D_keras import densenet161_3D_DropOut, densenet121_3D_DropOut
+from T3D_keras import T3D_DenseNet, densenet121_3D_DropOut
 from get_video import video_gen_TL
 
 # there is a minimum number of frames that the network must have, values below 10 gives -- ValueError: Negative dimension size caused by subtracting 3 from 2 for 'conv3d_7/convolution'
@@ -42,7 +42,7 @@ def transfer_learning():
 
     # Get Model
     # model = densenet121_3D_DropOut(sample_input.shape, nb_classes)
-    model = densenet161_3D_DropOut(sample_input.shape, nb_classes)
+    model = T3D_DenseNet(sample_input.shape, nb_classes)
 
     checkpoint = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)

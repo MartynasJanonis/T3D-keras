@@ -221,8 +221,8 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
 
 
 # the below model has the lowest Top-1 error in ImageNet Data Set:
-def densenet161_3D_DropOut(input_shape, nb_classes):
-    model = DenseNet3D(input_shape, growth_rate=48, block_config=(
+def T3D_DenseNet(input_shape, nb_classes):
+    model = DenseNet3D(input_shape, growth_rate=32, block_config=(
         6, 12, 36, 24), num_init_features=96, drop_rate=0.6, num_classes=nb_classes)
     return model
 
