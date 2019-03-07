@@ -13,14 +13,16 @@ def _DenseLayer(prev_layer, growth_rate, bn_size, drop_rate):
         # print('No Layer previous to Dense Layers!!')
         return None
     else:
-        x = BatchNormalization()(prev_layer)
+        x = BatchNormalization(momentum=0.1, epsilon=1e-05)(prev_layer)
+
     x = Activation('relu')(x)
-    x = Conv3D(filters=bn_size * growth_rate, kernel_size=1, strides=1, padding='same')(x)
+    x = Conv3D(filters=bn_size * growth_rate, kernel_size=1, strides=1, use_bias=False, padding='valid')(x)
     x = Dropout(drop_rate)(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
-    x = Conv3D(filters=growth_rate, kernel_size=3, strides=1, padding='same')(x)
+    x = Conv3D(filters=growth_rate, kernel_size=3, strides=1, use_bias=False, padding='same')(x)
     x = Dropout(drop_rate)(x)
+    x = Concatenate()([x, prev_layer])
 
     return x
 
@@ -42,8 +44,8 @@ def _Transition(prev_layer, num_output_features):
     # print('In _Transition')
     x = BatchNormalization()(prev_layer)
     x = Activation('relu')(x)
-    x = Conv3D(filters=num_output_features, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
-    x = AveragePooling3D(pool_size=(2, 2, 2), strides=(6, 2, 2))(x)
+    x = Conv3D(filters=num_output_features, kernel_size=1, strides=1, use_bias=False, padding='valid')(x)
+    x = AveragePooling3D(pool_size=2, strides=2)(x)
     # print('Completed _Transition')
     return x
 
@@ -53,17 +55,17 @@ def _TTL(prev_layer, third_kernel_size):
     b1 = BatchNormalization()(prev_layer)
     b1 = Activation('relu')(b1)
     # b1 = Conv3D(128, kernel_size=(1), strides=1, use_bias=False, padding='same')(b1)
-    b1 = Conv3D(128, kernel_size=(1, 1, 1), strides=1, use_bias=False, padding='same')(b1)
+    b1 = Conv3D(128, kernel_size=(1, 1, 1), strides=1, use_bias=False, padding='same', dilation_rate=1)(b1)
 
     b2 = BatchNormalization()(prev_layer)
     b2 = Activation('relu')(b2)
-    b2 = Conv3D(128, kernel_size=(3, 3, 3), strides=1, use_bias=False, padding='same')(b2)
+    b2 = Conv3D(128, kernel_size=(3, 3, 3), strides=1, use_bias=False, padding='same', dilation_rate=1)(b2)
 
     b3 = BatchNormalization()(prev_layer)
     b3 = Activation('relu')(b3)
-    b3 = Conv3D(128, kernel_size=third_kernel_size, strides=1, use_bias=False, padding='same')(b3)
+    b3 = Conv3D(128, kernel_size=third_kernel_size, strides=1, use_bias=False, padding='same', dilation_rate=1)(b3)
 
-    x = keras.layers.concatenate([b1, b2, b3], axis=1)
+    x = keras.layers.concatenate([b1, b2, b3], axis=-1)
     # print('completed _TTL')
     return x
 
@@ -94,51 +96,12 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     batch_densenet = Model(inputs=inp_2d_batch, outputs=batch_densenet)
     #-----------------------------------------------------------------
 
-    # First convolution-----------------------
-    inp_3d = (Input(shape=input_shape, name='3d_input'))
+    # inp_3d = (Input(shape=input_shape, name='3d_input'))
+    t3d = T3D169(include_top=False, input_shape=input_shape)
 
-
-    # need to check padding
-    x = (Conv3D(num_init_features, kernel_size=(3, 7, 7),
-                strides=2, padding='same', use_bias=False))(inp_3d)
-
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-
-    # need to check padding
-    x = MaxPooling3D(pool_size=(3, 3, 3), strides=(1,2,2), padding='same')(x)
-
-    # Each denseblock
-    num_features = num_init_features
-    for i, num_layers in enumerate(block_config):
-        # print('Pass', i)
-        x = _DenseBlock(x, num_layers=num_layers,
-                        bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
-
-        num_features = num_features + num_layers * growth_rate
-
-        if i != len(block_config) - 1:
-            # print('Not Last layer, so adding Temporal Transition Layer')
-            third_kernel_size = (4, 3, 3)
-            if i == 0:
-                third_kernel_size = (6, 3, 3)
-
-            x = _TTL(x, third_kernel_size)
-            # num_features = 128*3
-
-            x = _Transition(x, num_output_features=num_features)
-            num_features = num_features
-
-    # Final batch norm
-    x = BatchNormalization()(x)
-
-    x = Activation('relu')(x)
-    x = AveragePooling3D(pool_size=(2, 7, 7))(x)
-    x = Flatten(name='flatten_3d')(x)
-    x = Dense(1024, activation='relu')(x)
     #--------------from 2d densenet model-----------------
+    x = GlobalAveragePooling3D(name='avg_pool_t3d')(t3d.output)
     y = GlobalAveragePooling3D(name='avg_pool_densnet3d')(batch_densenet.output)
-    y = Dense(1024, activation='relu')(y)
 
     #-----------------------------------------------------
     x = keras.layers.concatenate([x,y])
@@ -149,14 +112,14 @@ def DenseNet3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = Dropout(0.35)(x)
     out = Dense(num_classes, activation='softmax')(x)
 
-    model = Model(inputs=[inp_2d_batch, inp_3d], outputs=[out])
+    model = Model(inputs=[inp_2d_batch, t3d.input], outputs=[out])
     # model.summary()
 
     return model
 
 
 # The T3D CNN standalone
-def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
+def T3D(include_top=True, input_shape=None, growth_rate=32, block_config=(6, 12, 24, 16),
                num_init_features=64, bn_size=4, drop_rate=0, num_classes=5):
     r"""Densenet-BC model class, based on
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`
@@ -182,7 +145,13 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = Activation('relu')(x)
 
     # need to check padding
-    x = MaxPooling3D(pool_size=(3, 3, 3), strides=(1,2,2), padding='same')(x)
+    # -------------------------------------------------------------------------
+    # In the paper it lists it as 3 × 3 × 3 max pool, stride 1, but the output
+    # shape as 56 x 56 x 16. In reality the paper's max pool settings result
+    # in the output shape of 112 x 112 x 16 with padding and 110 x 110 x 14
+    # without.
+    x = MaxPooling3D(pool_size=3, strides=(1,2,2), padding='same')(x)
+    # -------------------------------------------------------------------------
 
     # Each denseblock
     num_features = num_init_features
@@ -200,7 +169,7 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
                 third_kernel_size = (6, 3, 3)
 
             x = _TTL(x, third_kernel_size)
-            # num_features = 128*3
+            num_features = 128*3
 
             x = _Transition(x, num_output_features=num_features)
             num_features = num_features
@@ -209,10 +178,12 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     x = BatchNormalization()(x)
 
     x = Activation('relu')(x)
-    x = AveragePooling3D(pool_size=(2, 7, 7))(x)
-    x = Flatten(name='flatten_3d')(x)
 
-    out = Dense(num_classes, activation='softmax')(x)
+    if include_top:
+        x = GlobalAveragePooling3D()(x)
+        out = Dense(num_classes, activation='softmax')(x)
+    else:
+        out = x
 
     model = Model(inputs=[inp_3d], outputs=[out])
     # model.summary()
@@ -220,16 +191,15 @@ def T3D(input_shape, growth_rate=32, block_config=(6, 12, 24, 16),
     return model
 
 
-# the below model has the lowest Top-1 error in ImageNet Data Set:
-def T3D_DenseNet(input_shape, nb_classes):
+def T3D169_DenseNet(input_shape, nb_classes):
     model = DenseNet3D(input_shape, growth_rate=32, block_config=(
-        6, 12, 36, 24), num_init_features=96, drop_rate=0.6, num_classes=nb_classes)
+        6, 12, 36, 36), num_init_features=64, drop_rate=0.2, num_classes=nb_classes)
     return model
 
+def T3D169(include_top, input_shape, nb_classes=2):
+    model = T3D(include_top=include_top, input_shape=input_shape, block_config=(6,12,32,32), num_classes=nb_classes)
+    return model
 
-def densenet121_3D_DropOut(input_shape, nb_classes):
-    """Constructs a DenseNet-121_DropOut model.
-    """
-    model = DenseNet3D(input_shape, num_init_features=64, growth_rate=32,
-                       block_config=(6, 12, 24, 16), drop_rate=0.6, num_classes=nb_classes)
+def T3D169_Dropout(input_shape, nb_classes, d_rate):
+    model = T3D(input_shape,block_config=(6,12,32,32), num_classes=nb_classes, drop_rate=d_rate)
     return model
