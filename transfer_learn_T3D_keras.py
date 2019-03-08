@@ -51,7 +51,7 @@ def transfer_learning():
                                        patience=10,
                                        verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
     csvLogger = CSVLogger('history.csv', append=True)
-    tensorboard = TensorBoard(log_dir='./logs/T3D_Transfer_Learning')
+    tensorboard = TensorBoard(log_dir='./logs/T3D_Fixed')
 
     callbacks_list = [checkpoint, reduceLROnPlat, earlyStop, csvLogger, tensorboard]
 
@@ -70,8 +70,8 @@ def transfer_learning():
     print('Training started....')
 
     # Arbitrary numbers as the dataset is huge (many video combinations possible)
-    train_steps = 1800
-    val_steps = 200
+    train_steps = 1600
+    val_steps = 400
 
     history = model.fit_generator(
         video_generator,
