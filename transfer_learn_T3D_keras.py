@@ -48,10 +48,10 @@ def transfer_learning():
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
     earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=50)
     reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
-                                       patience=10,
+                                       patience=15,
                                        verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
     csvLogger = CSVLogger('history.csv', append=True)
-    tensorboard = TensorBoard(log_dir='./logs/T3D_Fixed')
+    tensorboard = TensorBoard(log_dir='./logs/T3D_Transfer_Learning')
 
     callbacks_list = [checkpoint, reduceLROnPlat, earlyStop, csvLogger, tensorboard]
 
