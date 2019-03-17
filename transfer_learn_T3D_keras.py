@@ -3,7 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, CSVLogger, TensorBoard
+from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger, \
+                            TensorBoard, LearningRateScheduler
 from keras.optimizers import Adam, SGD, Nadam
 from keras import losses
 import keras.backend as K
@@ -46,14 +47,12 @@ def transfer_learning():
 
     checkpoint = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
-    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=50)
-    reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
-                                       patience=15,
-                                       verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
+    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=100)
+    lrscheduler = LearningRateScheduler(lambda epoch: 0.1 * pow(10,-(epoch//30)))
     csvLogger = CSVLogger('history.csv', append=True)
     tensorboard = TensorBoard(log_dir='./logs/T3D_Transfer_Learning')
 
-    callbacks_list = [checkpoint, reduceLROnPlat, earlyStop, csvLogger, tensorboard]
+    callbacks_list = [checkpoint, lrscheduler, earlyStop, csvLogger, tensorboard]
 
     # compile model
     #optim = Adam(lr=1e-4, decay=1e-6)
