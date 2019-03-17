@@ -43,7 +43,7 @@ def transfer_learning():
 
     # -------------------------------------------------------------------------
     # The LR schedule is what the paper used, but from my experience, the
-    # initial lr is way to high and causes the loss to jump all over the place.
+    # initial lr is way too high and causes the loss to jump all over the place.
     # -------------------------------------------------------------------------
     # lrscheduler = LearningRateScheduler(lambda epoch: 0.1 * pow(10,-(epoch//30)), verbose=1)
 
