@@ -48,7 +48,7 @@ def transfer_learning():
     checkpoint = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
     earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=100)
-    lrscheduler = LearningRateScheduler(lambda epoch: 0.1 * pow(10,-(epoch//30)))
+    lrscheduler = LearningRateScheduler(lambda epoch: 0.1 * pow(10,-(epoch//30)), verbose=1)
     csvLogger = CSVLogger('history.csv', append=True)
     tensorboard = TensorBoard(log_dir='./logs/T3D_Transfer_Learning')
 
