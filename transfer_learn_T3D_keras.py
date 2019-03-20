@@ -37,9 +37,11 @@ def transfer_learning():
     # Get Model
     model = T3D169_DenseNet(sample_input.shape, nb_classes)
 
-    checkpoint = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
+    checkpoint = ModelCheckpoint('T3D_best_model_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
-    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=100)
+
+    checkpoint_all = ModelCheckpoint('T3D_saved_model_weights.hdf5', monitor='val_loss',
+                                 verbose=1, save_best_only=False, mode='min', save_weights_only=True)
 
     # -------------------------------------------------------------------------
     # The LR schedule is what the paper used, but from my experience, the
@@ -51,7 +53,7 @@ def transfer_learning():
     csvLogger = CSVLogger('history.csv', append=True)
     tensorboard = TensorBoard(log_dir='./logs/T3D_Transfer_Learning')
 
-    callbacks_list = [checkpoint, lrscheduler, earlyStop, csvLogger, tensorboard]
+    callbacks_list = [checkpoint, checkpoint_all, lrscheduler, csvLogger, tensorboard]
 
     # Compile model
     optim = SGD(lr = 0.1, momentum=0.9, decay=1e-4, nesterov=True)
