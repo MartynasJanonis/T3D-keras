@@ -132,9 +132,19 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
             y_train = np.empty([0], dtype=np.int32)
 
             for i in current_batch:
-                # get frames and its corresponding color for an traffic light
-                frames, action_class = get_video_and_label(
-                    i, data, frames_per_video, frame_height, frame_width)
+                # get frames and its corresponding action
+                try:
+                    frames, action_class = get_video_and_label(
+                        i, data, frames_per_video, frame_height, frame_width)
+                except IndexError:
+                    # means opencv was unable to open the video file
+                    continue
+                
+                # whether to apply augmentations
+                aug = random.randint(0,1)
+                if aug:
+                    frames = [cv2.flip(f,1) for f in frames]
+                    # print("AUG applied")
 
                 frames = np.asarray(frames)
                 # standardize the frames
