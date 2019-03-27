@@ -133,13 +133,9 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
 
             for i in current_batch:
                 # get frames and its corresponding action
-                try:
-                    frames, action_class = get_video_and_label(
-                        i, data, frames_per_video, frame_height, frame_width)
-                except IndexError:
-                    # means opencv was unable to open the video file
-                    continue
-                
+                frames, action_class = get_video_and_label(
+                    i, data, frames_per_video, frame_height, frame_width)
+
                 # whether to apply augmentations
                 aug = random.randint(0,1)
                 if aug:
