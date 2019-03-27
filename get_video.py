@@ -1,4 +1,5 @@
 import os
+import sys
 import cv2
 import numpy as np
 from keras.utils.np_utils import to_categorical
@@ -13,17 +14,21 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
     # print('reading video from', src)
     cap = cv2.VideoCapture(src)
     frames = []
-    num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    # A hack to get the usable frame count
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 2147483646)
+    num_frames = cap.get(cv2.CAP_PROP_POS_FRAMES)+1
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    
     # set start frame number
     try:
         seq_begin = random.randint(0, num_frames-fpv)
     except ValueError:
         # If there aren't enough frames, just start at the beginning
         seq_begin = 0
-        # print(src, " doesn't have enough frames, padding with the last frame")
+        # print(src, " doesn't have enough frames,# cv2.cvtColor(frame, cv2.COLOR_BGR2RGB, frame) padding with the last frame")
 
     cap.set(cv2.CAP_PROP_POS_FRAMES, seq_begin)
-
     if not cap.isOpened():
         cap.open(src)
     ret = True
@@ -32,8 +37,6 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
         ret, frame = cap.read()
         if(not ret):
             break
-        # Convert BGR->RGB
-        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB, frame)
         frames.append(frame)
         fpv-=1
         if cv2.waitKey(1) & 0xFF == ord('q'):
