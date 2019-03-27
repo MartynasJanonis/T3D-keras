@@ -11,7 +11,7 @@ ROOT_PATH = ''
 # TODO: Figure out whether it's worth mean subtracting images
 
 def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
-    print('reading video from', src)
+    # print('reading video from', src)
     cap = cv2.VideoCapture(src)
     frames = []
 
