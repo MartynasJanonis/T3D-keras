@@ -105,3 +105,44 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
         y_train = to_categorical(y_train, num_classes=num_classes)
 
         yield ([input_2d_batch, input_3d], y_train)
+
+
+def get_video_and_label(index, data, frames_per_video, frame_height, frame_width):
+    # Read clip and appropiately send the sports' class
+    frames = get_video_frames(os.path.join(
+        ROOT_PATH, data['path'].values[index].strip()), frames_per_video, frame_height, frame_width)
+    action_class = data['class'].values[index]
+
+    frames = np.expand_dims(frame, axis=0)
+    
+    return frames, action_class
+
+
+def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_classes, batch_size=4):
+    while True:
+        # Randomize the indices to make an array
+        indices_arr = np.random.permutation(data.count()[0])
+        for batch in range(0, len(indices_arr), batch_size):
+            # slice out the current batch according to batch-size
+            current_batch = indices_arr[batch:(batch + batch_size)]
+
+            # initializing the arrays, x_train and y_train
+            video_clips = np.empty([0, frames_per_video, frame_height, frame_width, channels], dtype=np.float32)
+
+            y_train = np.empty([0], dtype=np.int32)
+
+            for i in current_batch:
+                # get frames and its corresponding color for an traffic light
+                frames, action_class = get_video_and_label(
+                    i, data, frames_per_video, frame_height, frame_width)
+
+                frames = np.asarray(frames)
+                # standardize the frames
+                frames = (frames - np.mean(frames)) / np.std(frames)
+                # Appending them to existing batch
+                video_clips = np.append(frames, single_frame, axis=0)
+
+                y_train = np.append(y_train, [action_class])
+            y_train = to_categorical(y_train, num_classes=num_classes)
+        
+        yield (video_clips, y_train)
