@@ -59,7 +59,7 @@ def train():
     #optim = Adam(lr=1e-4, decay=1e-6)
     #optim = SGD(lr = 0.1, momentum=0.9, decay=1e-4, nesterov=True)
     optim = AdaBound()
-    model.compile(optimizer=optim, loss=[binary_focal_loss(alpha=.25, gamma=2)]], metrics=['accuracy'])
+    model.compile(optimizer=optim, loss=[binary_focal_loss(alpha=.25, gamma=2)], metrics=['accuracy'])
     
     if os.path.exists('./T3D_weights.hdf5'):
         print('Pre-existing model weights found, loading weights.......')
