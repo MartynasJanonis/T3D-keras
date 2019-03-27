@@ -112,8 +112,6 @@ def get_video_and_label(index, data, frames_per_video, frame_height, frame_width
     frames = get_video_frames(os.path.join(
         ROOT_PATH, data['path'].values[index].strip()), frames_per_video, frame_height, frame_width)
     action_class = data['class'].values[index]
-
-    frames = np.expand_dims(frames, axis=0)
     
     return frames, action_class
 
@@ -145,6 +143,7 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
                 frames = np.asarray(frames)
                 # standardize the frames
                 frames = (frames - np.mean(frames)) / np.std(frames)
+                frames = np.expand_dims(frames, axis=0)
                 # Appending them to existing batch
                 video_clips = np.append(video_clips, frames, axis=0)
 
