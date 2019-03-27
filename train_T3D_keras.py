@@ -48,14 +48,13 @@ def train():
 
     checkpoint = ModelCheckpoint('T3D_weights.hdf5', monitor='val_loss',
                                  verbose=1, save_best_only=True, mode='min', save_weights_only=True)
-    earlyStop = EarlyStopping(monitor='val_loss', mode='min', patience=100)
-    reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
-                                       patience=20,
-                                       verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
+    # reduceLROnPlat = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
+    #                                    patience=20,
+    #                                    verbose=1, mode='min', min_delta=0.0001, cooldown=2, min_lr=1e-6)
     csvLogger = CSVLogger('T3D_history.csv', append=True)
     tensorboard = TensorBoard(log_dir=f'./logs/T3D-{int(time.time())}')
 
-    callbacks_list = [checkpoint, reduceLROnPlat, earlyStop, csvLogger, tensorboard]
+    callbacks_list = [checkpoint, csvLogger, tensorboard]
 
     # compile model
     #optim = Adam(lr=1e-4, decay=1e-6)
