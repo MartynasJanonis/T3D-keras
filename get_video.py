@@ -11,7 +11,7 @@ ROOT_PATH = ''
 # TODO: Figure out whether it's worth mean subtracting images
 
 def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
-    # print('reading video from', src)
+    print('reading video from', src)
     cap = cv2.VideoCapture(src)
     frames = []
 
@@ -152,5 +152,4 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
 
                 y_train = np.append(y_train, [action_class])
             y_train = to_categorical(y_train, num_classes=num_classes)
-        
-        yield (video_clips, y_train)
+            yield (video_clips, y_train)
