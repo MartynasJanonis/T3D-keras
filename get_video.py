@@ -140,7 +140,7 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
                 # standardize the frames
                 frames = (frames - np.mean(frames)) / np.std(frames)
                 # Appending them to existing batch
-                video_clips = np.append(frames, single_frame, axis=0)
+                video_clips = np.append(video_clips, frames, axis=0)
 
                 y_train = np.append(y_train, [action_class])
             y_train = to_categorical(y_train, num_classes=num_classes)
