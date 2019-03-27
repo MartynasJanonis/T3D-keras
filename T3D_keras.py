@@ -201,5 +201,5 @@ def T3D169(include_top, input_shape, nb_classes=2):
     return model
 
 def T3D169_Dropout(input_shape, nb_classes, d_rate=0.2):
-    model = T3D(input_shape,block_config=(6,12,32,32), num_classes=nb_classes, drop_rate=d_rate)
+    model = T3D(input_shape=input_shape,block_config=(6,12,32,32), num_classes=nb_classes, drop_rate=d_rate)
     return model
