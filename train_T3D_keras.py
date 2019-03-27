@@ -3,8 +3,10 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger, \
+                            TensorBoard
 from keras.optimizers import Adam, SGD
+from keras import losses
 import keras.backend as K
 import traceback
 import time
