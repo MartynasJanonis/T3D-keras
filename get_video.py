@@ -113,7 +113,7 @@ def get_video_and_label(index, data, frames_per_video, frame_height, frame_width
         ROOT_PATH, data['path'].values[index].strip()), frames_per_video, frame_height, frame_width)
     action_class = data['class'].values[index]
 
-    frames = np.expand_dims(frame, axis=0)
+    frames = np.expand_dims(frames, axis=0)
     
     return frames, action_class
 
