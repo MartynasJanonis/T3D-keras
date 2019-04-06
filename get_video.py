@@ -10,7 +10,7 @@ ROOT_PATH = ''
 CROP_TOP_MAX = 256-224
 CROP_LEFT_MAX = 256-224
 
-def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
+def get_video_frames(src, fpv=32, frame_height=224, frame_width=224, rand_cropping=True):
     # print('reading video from', src)
     cap = cv2.VideoCapture(src)
     frames = []
@@ -50,11 +50,16 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
 
     # print(len(frames))
 
-    # Apply random cropping
-    top = random.randint(0, CROP_TOP_MAX)
-    left = random.randint(0, CROP_LEFT_MAX)
-    frames = [f[top:frame_height+top, left:frame_width+left] for f in frames]
-    # frames = [cv2.resize(f,(frame_width, frame_height)) for f in frames]
+    # Apply cropping
+    if rand_cropping:
+        top = random.randint(0, CROP_TOP_MAX)
+        left = random.randint(0, CROP_LEFT_MAX)
+        frames = [f[top:frame_height+top, left:frame_width+left] for f in frames]
+    else:
+        # Center crop
+        top = CROP_TOP_MAX // 2
+        left = CROP_LEFT_MAX // 2
+        frames = [f[top:frame_height+top, left:frame_width+left] for f in frames]
 
     frames = [cv2.normalize(f, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX) for f in frames]
 
@@ -116,16 +121,16 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
         yield ([input_2d_batch, input_3d], y_train)
 
 
-def get_video_and_label(index, data, frames_per_video, frame_height, frame_width):
+def get_video_and_label(index, data, frames_per_video, frame_height, frame_width, rand_cropping=True):
     # Read clip and appropiately send the class
     frames = get_video_frames(os.path.join(
-        ROOT_PATH, data['path'].values[index].strip()), frames_per_video, frame_height, frame_width)
+        ROOT_PATH, data['path'].values[index].strip()), frames_per_video, frame_height, frame_width, rand_cropping=rand_cropping)
     action_class = data['class'].values[index]
     
     return frames, action_class
 
 
-def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_classes, batch_size=4):
+def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_classes, batch_size=4, rand_cropping=True):
     while True:
         # Randomize the indices to make an array
         indices_arr = np.random.permutation(data.count()[0])
@@ -141,7 +146,7 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
             for i in current_batch:
                 # get frames and its corresponding action
                 frames, action_class = get_video_and_label(
-                    i, data, frames_per_video, frame_height, frame_width)
+                    i, data, frames_per_video, frame_height, frame_width, rand_cropping=rand_cropping)
 
                 # whether to apply augmentations
                 aug = random.randint(0,1)
