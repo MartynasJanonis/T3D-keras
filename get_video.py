@@ -7,8 +7,8 @@ import random
 
 ROOT_PATH = ''
 
-# TODO: Add random cropping (from 256x256 to 224x224)
-# TODO: Figure out whether it's worth mean subtracting images
+CROP_TOP_MAX = 256-224
+CROP_LEFT_MAX = 256-224
 
 def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
     # print('reading video from', src)
@@ -49,7 +49,13 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224):
         fpv-=1
 
     # print(len(frames))
-    frames = [cv2.resize(f,(frame_width, frame_height)) for f in frames]
+
+    # Apply random cropping
+    top = random.randint(0, CROP_TOP_MAX)
+    left = random.randint(0, CROP_LEFT_MAX)
+    frames = [f[top:frame_height+top, left:frame_width+left] for f in frames]
+    # frames = [cv2.resize(f,(frame_width, frame_height)) for f in frames]
+
     frames = [cv2.normalize(f, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX) for f in frames]
 
     return frames
@@ -111,7 +117,7 @@ def video_gen_TL(path_to_videos, frames_per_video, frame_height, frame_width, ch
 
 
 def get_video_and_label(index, data, frames_per_video, frame_height, frame_width):
-    # Read clip and appropiately send the sports' class
+    # Read clip and appropiately send the class
     frames = get_video_frames(os.path.join(
         ROOT_PATH, data['path'].values[index].strip()), frames_per_video, frame_height, frame_width)
     action_class = data['class'].values[index]
