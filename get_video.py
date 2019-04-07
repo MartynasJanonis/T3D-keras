@@ -48,7 +48,8 @@ def get_video_frames(src, fpv=32, frame_height=224, frame_width=224, rand_croppi
         frames.append(frames[len(frames)-1])
         fpv-=1
 
-    # print(len(frames))
+    # Resize to 256x256
+    frames = [cv2.resize(f,(256, 256)) for f in frames]
 
     # Apply cropping
     if rand_cropping:
