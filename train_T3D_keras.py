@@ -38,9 +38,9 @@ def train():
     nb_classes = len(set(d_train['class']))
 
     video_train_generator = video_gen(
-        d_train, FRAMES_PER_VIDEO, FRAME_HEIGHT, FRAME_WIDTH, FRAME_CHANNEL, nb_classes, batch_size=BATCH_SIZE)
+        d_train, FRAMES_PER_VIDEO, FRAME_HEIGHT, FRAME_WIDTH, FRAME_CHANNEL, nb_classes, batch_size=BATCH_SIZE, augmentations=True)
     video_val_generator = video_gen(
-        d_valid, FRAMES_PER_VIDEO, FRAME_HEIGHT, FRAME_WIDTH, FRAME_CHANNEL, nb_classes, batch_size=BATCH_SIZE)
+        d_valid, FRAMES_PER_VIDEO, FRAME_HEIGHT, FRAME_WIDTH, FRAME_CHANNEL, nb_classes, batch_size=BATCH_SIZE, augmentations=False)
 
     # Get Model
     # model = densenet121_3D_DropOut(sample_input.shape, nb_classes)

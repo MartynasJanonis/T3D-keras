@@ -130,7 +130,7 @@ def get_video_and_label(index, data, frames_per_video, frame_height, frame_width
     return frames, action_class
 
 
-def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_classes, batch_size=4, rand_cropping=True):
+def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_classes, batch_size=4, augmentations=True):
     while True:
         # Randomize the indices to make an array
         indices_arr = np.random.permutation(data.count()[0])
@@ -146,13 +146,14 @@ def video_gen(data, frames_per_video, frame_height, frame_width, channels, num_c
             for i in current_batch:
                 # get frames and its corresponding action
                 frames, action_class = get_video_and_label(
-                    i, data, frames_per_video, frame_height, frame_width, rand_cropping=rand_cropping)
+                    i, data, frames_per_video, frame_height, frame_width, rand_cropping=augmentations)
 
                 # whether to apply augmentations
-                aug = random.randint(0,1)
-                if aug:
-                    frames = [cv2.flip(f,1) for f in frames]
-                    # print("AUG applied")
+                if augmentations:
+                    aug = random.randint(0,1)
+                    if aug:
+                        frames = [cv2.flip(f,1) for f in frames]
+                        # print("AUG applied")
 
                 frames = np.asarray(frames)
                 # standardize the frames
