@@ -4,7 +4,7 @@ A Temporal 3D for action recognition in videos
 ![T3D Block Diagram](./model_block_diagram.png "T3D")
 
 
-This code is written in **keras** for transfer learning as described in the paper.
+This code is written in **Keras** for transfer learning as described in the paper.
 
 **[Temporal 3D ConvNets: New Architecture and Transfer Learning for Video Classification](https://arxiv.org/abs/1711.08200)**,
 <br>
@@ -37,5 +37,5 @@ archivePrefix = "arXiv",
 
 ```
 
-### Dataset
-[UCF50](http://crcv.ucf.edu/data/UCF50.rar) video dataset was used
+### Datasets
+[Kinetics-600](https://deepmind.com/research/open-source/open-source-datasets/kinetics/) video dataset was used for transfer learning.

@@ -1,0 +1,10 @@
+__pycache__/
+.vscode/
+logs/
+T3D_saved_model_weights.hdf5
+T3D_saved_model.h5
+test.csv
+train.csv
+history.csv
+focal_loss.py
+classify_video.py
